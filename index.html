@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>机电复合传动系统健康管理与故障诊断平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg0:#060a14;--bg1:#0a0e1a;--bg2:#111827;--bg3:#151d2e;--bg4:#1a2540;--bg5:#1f2f52;
+  --bd:#1e2d4a;--bd2:#2a3f6a;
+  --t1:#e8ecf4;--t2:#7b8ba5;--t3:#4a5568;
+  --blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--yellow:#f59e0b;--red:#ef4444;--purple:#8b5cf6;--orange:#f97316;--teal:#14b8a6;
+  --gb:linear-gradient(135deg,#3b82f6,#06b6d4);--gg:linear-gradient(135deg,#10b981,#34d399);--gr:linear-gradient(135deg,#ef4444,#f97316);--gy:linear-gradient(135deg,#f59e0b,#fbbf24);
+  --r:12px;--rs:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Noto Sans SC',sans-serif;background:var(--bg1);color:var(--t1);display:flex;flex-direction:column;font-size:12px;}
+::-webkit-scrollbar{width:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px;}
+button,select,input{font-family:inherit;cursor:pointer;}
+select,input{background:var(--bg3);color:var(--t1);border:1px solid var(--bd);border-radius:6px;padding:5px 10px;font-size:11px;outline:none;}
+select:focus,input:focus{border-color:var(--blue);}
+
+.hdr{height:44px;background:linear-gradient(90deg,#0d1424,#111f3a,#0d1424);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;position:relative;z-index:100;}
+.hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:.3;}
+.logo{display:flex;align-items:center;gap:8px;}
+.logo-i{width:24px;height:24px;background:var(--gb);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;box-shadow:0 0 8px rgba(59,130,246,.3);}
+.logo-t{font-size:12px;font-weight:700;letter-spacing:.5px;background:var(--gb);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hdr-c{display:flex;align-items:center;gap:10px;position:absolute;left:50%;transform:translateX(-50%);}
+.hdr-st{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--t2);background:rgba(16,185,129,.08);padding:2px 8px;border-radius:14px;border:1px solid rgba(16,185,129,.12);}
+.st-dot{width:5px;height:5px;background:var(--green);border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.4)}50%{box-shadow:0 0 0 4px rgba(16,185,129,0)}}
+.hdr-time{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--t2);}
+.hdr-r{display:flex;align-items:center;gap:5px;}
+.hdr-btn{background:none;border:1px solid var(--bd);color:var(--t2);padding:3px 8px;border-radius:5px;font-size:9px;transition:all .2s;}
+.hdr-btn:hover{border-color:var(--blue);color:var(--blue);}
+.alrt{position:relative;}.alrt::after{content:'3';position:absolute;top:-3px;right:-5px;width:12px;height:12px;background:var(--red);border-radius:50%;font-size:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;}
+.ver-tag{font-size:8px;color:var(--t3);border:1px solid var(--bd);padding:1px 5px;border-radius:3px;}
+
+.lay{display:flex;flex:1;overflow:hidden;}
+.sb{width:185px;background:var(--bg2);border-right:1px solid var(--bd);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.sb-s{padding:8px 7px 4px;}
+.sb-l{font-size:8px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3);padding:0 6px;margin-bottom:4px;}
+.ni{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:5px;cursor:pointer;transition:all .12s;font-size:10px;color:var(--t2);margin-bottom:1px;position:relative;user-select:none;}
+.ni:hover{background:var(--bg3);color:var(--t1);}
+.ni.act{background:rgba(59,130,246,.1);color:var(--blue);font-weight:500;}
+.ni.act::before{content:'';position:absolute;left:0;top:2px;bottom:2px;width:2px;background:var(--blue);border-radius:0 2px 2px 0;}
+.ni-i{width:13px;text-align:center;font-size:10px;flex-shrink:0;}
+.ni-w{margin-left:auto;width:13px;height:13px;background:rgba(239,68,68,.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;color:var(--red);}
+.ss-nav{padding:7px;border-top:1px solid var(--bd);margin-top:auto;}
+.si{display:flex;align-items:center;gap:5px;padding:4px 6px;border-radius:4px;cursor:pointer;font-size:9px;color:var(--t2);transition:all .12s;margin-bottom:1px;user-select:none;}
+.si:hover{background:var(--bg3);color:var(--t1);}.si.act{background:rgba(6,182,212,.1);color:var(--cyan);}
+.sd{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.sd.g{background:var(--green);}.sd.y{background:var(--yellow);}.sd.r{background:var(--red);animation:pr 1.5s infinite;}
+@keyframes pr{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.3)}50%{box-shadow:0 0 0 3px rgba(239,68,68,0)}}
+
+.ct{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;background:radial-gradient(ellipse at 20% 0%,rgba(59,130,246,.02) 0%,transparent 50%),var(--bg1);}
+
+.card{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;overflow:hidden;animation:fi .3s ease both;}
+@keyframes fi{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;border-bottom:1px solid var(--bd);}
+.ct-t{font-size:10px;font-weight:600;display:flex;align-items:center;gap:4px;}
+.ct-d{width:4px;height:4px;border-radius:50%;background:var(--cyan);}
+.cbg{font-size:7px;padding:2px 5px;border-radius:8px;font-weight:600;}
+.cbg.live{background:rgba(16,185,129,.1);color:var(--green);}.cbg.warn{background:rgba(245,158,11,.1);color:var(--yellow);}.cbg.info{background:rgba(59,130,246,.1);color:var(--blue);}.cbg.err{background:rgba(239,68,68,.1);color:var(--red);}
+.cbd{padding:9px 11px;}
+.ptb{display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pt{font-size:14px;font-weight:700;}
+.pbc{font-size:9px;color:var(--t3);margin-bottom:1px;}.pbc span{color:var(--cyan);}
+.pa{display:flex;gap:4px;}
+.btn-p{background:var(--gb);color:#fff;border:none;padding:4px 10px;border-radius:5px;font-size:9px;font-weight:500;transition:all .2s;box-shadow:0 1px 5px rgba(59,130,246,.2);}
+.btn-p:hover{transform:translateY(-1px);}
+.btn-o{background:transparent;color:var(--t2);border:1px solid var(--bd);padding:4px 10px;border-radius:5px;font-size:9px;transition:all .2s;}
+.btn-o:hover{border-color:var(--blue);color:var(--blue);}
+.btn-sm{padding:3px 6px;font-size:8px;border-radius:3px;border:1px solid var(--bd);background:none;color:var(--t2);transition:all .1s;}
+.btn-sm:hover{border-color:var(--blue);color:var(--blue);}
+.btn-sm.primary{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g21{display:grid;grid-template-columns:2fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+
+.ovc{background:var(--bg3);border:1px solid var(--bd);border-radius:10px;padding:9px;position:relative;overflow:hidden;transition:all .2s;}
+.ovc:hover{border-color:var(--bd2);}
+.ovc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.ovc.bl::before{background:var(--gb);}.ovc.gn::before{background:var(--gg);}.ovc.yl::before{background:var(--gy);}.ovc.rd::before{background:var(--gr);}.ovc.pp::before{background:linear-gradient(90deg,#8b5cf6,#a78bfa);}.ovc.cn::before{background:linear-gradient(90deg,#06b6d4,#22d3ee);}
+.ov-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;}
+.ov-lb{font-size:8px;color:var(--t2);font-weight:500;}
+.ov-ic{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.ov-ic.bl{background:rgba(59,130,246,.1);color:var(--blue);}.ov-ic.gn{background:rgba(16,185,129,.1);color:var(--green);}.ov-ic.yl{background:rgba(245,158,11,.1);color:var(--yellow);}.ov-ic.rd{background:rgba(239,68,68,.1);color:var(--red);}.ov-ic.pp{background:rgba(139,92,246,.1);color:var(--purple);}.ov-ic.cn{background:rgba(6,182,212,.1);color:var(--cyan);}
+.ov-v{font-size:18px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1;}
+.ov-s{font-size:7px;color:var(--t3);margin-top:2px;}
+
+.stb{width:100%;border-collapse:collapse;font-size:9px;}
+.stb th{text-align:left;font-weight:600;color:var(--t3);padding:5px 6px;border-bottom:1px solid var(--bd);font-size:7px;letter-spacing:.5px;text-transform:uppercase;}
+.stb td{padding:6px;border-bottom:1px solid rgba(30,45,74,.2);vertical-align:middle;}
+.stb tr:hover td{background:rgba(59,130,246,.02);}
+.sn{font-weight:500;color:var(--t1);}
+.sid{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--cyan);opacity:.8;}
+.sv{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:10px;}
+.sv.n{color:var(--green);}.sv.w{color:var(--yellow);}.sv.d{color:var(--red);}
+.sbar{width:50px;height:3px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden;display:inline-block;vertical-align:middle;}
+.sbf{height:100%;border-radius:2px;}.sbf.g{background:var(--gg);}.sbf.y{background:var(--gy);}.sbf.r{background:var(--gr);}
+.stag{font-size:7px;padding:1px 5px;border-radius:6px;font-weight:600;white-space:nowrap;}
+.stag.n{background:rgba(16,185,129,.1);color:var(--green);}.stag.w{background:rgba(245,158,11,.1);color:var(--yellow);}.stag.d{background:rgba(239,68,68,.1);color:var(--red);}.stag.b{background:rgba(59,130,246,.1);color:var(--blue);}
+
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--bd);padding:0 10px;flex-wrap:wrap;}
+.tab{padding:6px 9px;font-size:9px;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;font-weight:500;user-select:none;white-space:nowrap;}
+.tab:hover{color:var(--t2);}.tab.act{color:var(--cyan);border-bottom-color:var(--cyan);}
+
+.chip{padding:3px 8px;font-size:8px;border-radius:12px;border:1px solid var(--bd);background:var(--bg4);color:var(--t3);cursor:pointer;transition:all .12s;user-select:none;display:inline-block;}
+.chip:hover{border-color:var(--blue);color:var(--t2);}
+.chip.act{background:rgba(59,130,246,.12);border-color:var(--blue);color:var(--blue);font-weight:600;}
+
+.cha{position:relative;border-radius:4px;overflow:hidden;background:linear-gradient(180deg,rgba(59,130,246,.01) 0%,transparent 100%);}
+.cha svg{width:100%;height:100%;display:block;}
+.ch-lb{display:flex;justify-content:space-between;padding:2px 2px 0;font-size:7px;color:var(--t3);font-family:'JetBrains Mono',monospace;}
+
+.sev{width:8px;height:8px;border-radius:50%;display:inline-block;}.sev.r{background:var(--red);}.sev.y{background:var(--yellow);}.sev.g{background:var(--green);}
+
+.hr-w{display:flex;align-items:center;justify-content:center;padding:6px 0;}
+.hr{position:relative;}.hr svg{transform:rotate(-90deg);}
+.hr-bg{fill:none;stroke:rgba(255,255,255,.04);stroke-width:5;}
+.hr-f{fill:none;stroke-width:5;stroke-linecap:round;}
+.hr-txt{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.hr-sc{font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1;}
+.hr-lb{font-size:7px;color:var(--t3);margin-top:1px;}
+
+.sys-diagram{position:relative;background:var(--bg0);border-radius:10px;padding:14px;min-height:280px;border:1px solid var(--bd);overflow:hidden;}
+.sys-node{position:absolute;background:var(--bg3);border:1px solid var(--bd);border-radius:8px;padding:7px 10px;cursor:pointer;transition:all .2s;text-align:center;z-index:2;min-width:70px;}
+.sys-node:hover{border-color:var(--blue);transform:scale(1.03);box-shadow:0 0 14px rgba(59,130,246,.1);}
+.sys-node .nd-icon{font-size:16px;margin-bottom:2px;}
+.sys-node .nd-name{font-size:8px;font-weight:600;white-space:nowrap;}
+.sys-node .nd-st{font-size:7px;margin-top:1px;display:flex;align-items:center;justify-content:center;gap:2px;}
+
+.di{display:flex;align-items:flex-start;gap:6px;padding:6px;background:rgba(255,255,255,.015);border-radius:5px;border-left:2px solid transparent;margin-bottom:4px;}
+.di.c{border-left-color:var(--red);}.di.w{border-left-color:var(--yellow);}.di.i{border-left-color:var(--blue);}
+.di-ic{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;flex-shrink:0;}
+.di-ic.r{background:rgba(239,68,68,.1);color:var(--red);}.di-ic.y{background:rgba(245,158,11,.1);color:var(--yellow);}.di-ic.b{background:rgba(59,130,246,.1);color:var(--blue);}
+.di-t{font-size:9px;font-weight:600;}.di-d{font-size:8px;color:var(--t2);line-height:1.3;}
+
+.proc-steps{display:flex;align-items:center;gap:3px;margin:6px 0;flex-wrap:wrap;}
+.proc-step{padding:4px 8px;background:var(--bg4);border-radius:5px;font-size:7px;color:var(--t3);border:1px solid var(--bd);white-space:nowrap;}
+.proc-step.active{background:rgba(59,130,246,.1);border-color:var(--blue);color:var(--blue);}
+.proc-step.done{background:rgba(16,185,129,.06);border-color:rgba(16,185,129,.15);color:var(--green);}
+.proc-arrow{color:var(--t3);font-size:8px;}
+
+.le{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid rgba(30,45,74,.2);font-size:9px;}
+.le-t{font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--t3);white-space:nowrap;min-width:48px;}
+.le-d{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.le-d.g{background:var(--green);}.le-d.y{background:var(--yellow);}.le-d.r{background:var(--red);}.le-d.b{background:var(--blue);}
+.le-m{color:var(--t2);line-height:1.3;}.le-m b{color:var(--t1);font-weight:500;}
+
+.fmd-comp{background:rgba(255,255,255,.015);border-radius:6px;padding:8px;border:1px solid var(--bd);margin-bottom:6px;}
+.fmd-title{font-size:8px;font-weight:600;color:var(--cyan);margin-bottom:4px;display:flex;justify-content:space-between;}
+
+.lv-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:4px;font-size:7px;font-weight:700;}
+.lv-0{background:rgba(16,185,129,.1);color:var(--green);}.lv-1{background:rgba(245,158,11,.1);color:var(--yellow);}.lv-2{background:rgba(239,68,68,.1);color:var(--red);}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo"><div class="logo-i">H</div><div class="logo-t">机电复合传动系统健康管理与故障诊断平台</div></div>
+  <div class="hdr-c"><div class="hdr-st"><div class="st-dot"></div>在线</div><div class="hdr-time" id="clock"></div></div>
+  <div class="hdr-r"><span class="ver-tag">v3.2.1</span><button class="hdr-btn alrt">🔔 告警</button><button class="hdr-btn">📊 报表</button><button class="hdr-btn">⚙ 设置</button></div>
+</header>
+<div class="lay">
+  <nav class="sb" id="sidebar">
+    <div class="sb-s">
+      <div class="sb-l">功能模块</div>
+      <div class="ni act" data-page="home"><div class="ni-i">🏠</div>装备状态总览</div>
+      <div class="ni" data-page="monitor"><div class="ni-i">🔍</div>状态监测与信号</div>
+      <div class="ni" data-page="assess"><div class="ni-i">📊</div>状态评估</div>
+      <div class="ni" data-page="anomaly"><div class="ni-i">⚡</div>异常报警<div class="ni-w">!</div></div>
+      <div class="ni" data-page="diagnosis"><div class="ni-i">🧠</div>故障诊断<div class="ni-w">!</div></div>
+      <div class="ni" data-page="siganalysis"><div class="ni-i">〰</div>信号分析</div>
+      <div class="ni" data-page="decision"><div class="ni-i">💡</div>辅助决策</div>
+      <div class="ni" data-page="maintenance"><div class="ni-i">🔧</div>维修事件管理</div>
+      <div class="ni" data-page="log"><div class="ni-i">📝</div>系统日志</div>
+    </div>
+    <div class="ss-nav">
+      <div class="sb-l">子系统导航</div>
+      <div class="si act" data-sub="gen"><div class="sd g"></div>发电机</div>
+      <div class="si" data-sub="hydraulic"><div class="sd y"></div>液压系统</div>
+      <div class="si" data-sub="clutch"><div class="sd g"></div>离合器与制动器</div>
+      <div class="si" data-sub="coupling"><div class="sd g"></div>功率耦合机构</div>
+      <div class="si" data-sub="motorL"><div class="sd r"></div>左驱动电机</div>
+      <div class="si" data-sub="motorR"><div class="sd g"></div>右驱动电机</div>
+    </div>
+  </nav>
+  <main class="ct" id="mc"></main>
+</div>
+
+<script>
+const SS={
+  gen:{name:'发电机系统',icon:'⚡',health:85,hasMotor:true,
+    signals:[
+      {name:'发电机电压',id:'Gen_voltage',val:862,unit:'V',max:975,min:750,fault:'发电机过/欠压',rule:'>975V/<750V超2s',pct:68,st:'n'},
+      {name:'电机绕组温度',id:'GCU_WindingTemp',val:186,unit:'°C',max:260,fault:'发电机过温',rule:'>260°C超2s',pct:72,st:'n'},
+      {name:'发电机转矩',id:'Gen_torque',val:2340,unit:'N·m',max:2500,fault:'发电机过载',rule:'>2500N·m超2s',pct:94,st:'w'},
+      {name:'GCU心跳',id:'EGen_Life',val:'OK',unit:'',max:'-',fault:'运行故障',rule:'心跳1s未更新',pct:20,st:'n'},
+      {name:'GCU模块温度',id:'GCU_ModuleTemp',val:142,unit:'°C',max:260,fault:'发电机过温',rule:'>260°C超2s',pct:55,st:'n'},
+      {name:'发电机转速',id:'GMot_Sep',val:3820,unit:'r/min',max:4300,fault:'发电机超速',rule:'>4300r/min超2s',pct:89,st:'n'},
+      {name:'峰值相电流',id:'CGen_WireCurrent',val:724,unit:'A',max:900,fault:'发电机过流',rule:'>900A超2s',pct:80,st:'n'},
+    ],
+    vibs:[{name:'前传动主轴上方振动',axes:false},{name:'前传动主轴左侧振动',axes:false}],
+    spdSig:'发电机转速 (GMot_Sep)',spdVal:3820,
+    subH:{电气:92,热管理:88,机械:76,通讯:98},funcs:['发电功能','电压调节','散热功能'],funcSt:[1,1,1]},
+  hydraulic:{name:'液压系统',icon:'💧',health:78,hasMotor:false,
+    signals:[
+      {name:'油泵电压',id:'BOilP_Voltage',val:845,unit:'V',max:975,fault:'油泵过/欠压',rule:'>975V/<750V超2s',pct:65,st:'n'},
+      {name:'油泵转速',id:'AOilP_Spd',val:2800,unit:'r/min',max:3500,fault:'油泵超速',rule:'>3500超2s',pct:80,st:'n'},
+      {name:'油泵温度',id:'EOilP_MotorTemp',val:95,unit:'°C',max:150,fault:'油泵过温',rule:'>150°C超2s',pct:63,st:'n'},
+      {name:'油泵电流',id:'COilP_Current',val:320,unit:'A',max:500,fault:'油泵过流',rule:'>500A超2s',pct:64,st:'n'},
+      {name:'主压力',id:'OilPress_Main',val:2.1,unit:'MPa',max:3.0,min:2.4,fault:'主压力偏低',rule:'<2.4MPa',pct:70,st:'w'},
+      {name:'润滑压力',id:'OilPress_Lub',val:1.8,unit:'MPa',max:2.5,fault:'润滑压力异常',rule:'偏低',pct:72,st:'n'},
+    ],
+    vibs:[{name:'压力油箱主轴右侧振动',axes:false}],spdSig:'油泵转速',spdVal:2800,
+    subH:{油泵电气:90,压力:68,热管理:85,润滑:82},funcs:['供压','润滑','冷却'],funcSt:[0,1,1]},
+  clutch:{name:'离合器与制动器',icon:'⚙',health:91,hasMotor:false,
+    signals:[
+      {name:'左制动压力',id:'OilPress_LeftBrake',val:1.2,unit:'MPa',max:3.0,fault:'异常',rule:'异常判定',pct:40,st:'n'},
+      {name:'右制动压力',id:'OilPress_RightBrake',val:1.3,unit:'MPa',max:3.0,fault:'异常',rule:'异常判定',pct:43,st:'n'},
+      {name:'左离合压力',id:'OilPress_LeftClutch',val:2.0,unit:'MPa',max:3.0,fault:'异常',rule:'异常判定',pct:67,st:'n'},
+      {name:'右离合压力',id:'OilPress_RightClutch',val:1.9,unit:'MPa',max:3.0,fault:'异常',rule:'异常判定',pct:63,st:'n'},
+      {name:'模式切换离合压力',id:'OilPress_MSClutch',val:1.8,unit:'MPa',max:3.0,fault:'异常',rule:'异常判定',pct:60,st:'n'},
+      {name:'左离合器阀',id:'ValvaCmd_LeftClutch',val:45,unit:'%',max:100,fault:'阀异常',rule:'超范围',pct:45,st:'n'},
+      {name:'右离合器阀',id:'ValvaCmd_RightClutch',val:48,unit:'%',max:100,fault:'阀异常',rule:'超范围',pct:48,st:'n'},
+      {name:'左制动器阀',id:'ValvaCmd_LeftBrake',val:0,unit:'%',max:100,fault:'阀异常',rule:'超范围',pct:0,st:'n'},
+      {name:'右制动器阀',id:'ValvaCmd_RightBrake',val:0,unit:'%',max:100,fault:'阀异常',rule:'超范围',pct:0,st:'n'},
+      {name:'模式切换离合阀',id:'ValvaCmd_MSClutch',val:52,unit:'%',max:100,fault:'阀异常',rule:'超范围',pct:52,st:'n'},
+    ],
+    vibs:[],spdSig:'',spdVal:0,subH:{制动:95,离合:88,阀控:90,同步:92},funcs:['制动','离合','模式切换'],funcSt:[1,1,1]},
+  coupling:{name:'功率耦合机构',icon:'🔗',health:88,hasMotor:false,
+    signals:[],vibs:[{name:'功率耦合下方振动',axes:false},{name:'功率耦合后侧振动',axes:false}],spdSig:'Gen转速(GMot_Sep)',spdVal:3820,
+    subH:{振动:82,结构:94,传动:88},funcs:['功率传递','模式耦合'],funcSt:[1,1]},
+  motorL:{name:'左驱动电机',icon:'🔴',health:62,hasMotor:true,
+    signals:[
+      {name:'左电机电压',id:'AMot_Voltage_L',val:890,unit:'V',max:975,fault:'过/欠压',rule:'>975/<750V超2s',pct:72,st:'n'},
+      {name:'左电机转速',id:'GMot_Spd_L',val:7620,unit:'r/min',max:9800,fault:'超速',rule:'>9800超2s',pct:78,st:'n'},
+      {name:'左电机转矩',id:'HMot_Torque_L',val:1380,unit:'N·m',max:1500,fault:'过载',rule:'>1500超2s',pct:92,st:'w'},
+      {name:'左MCU温度',id:'MCUL_ModuleTemp',val:245,unit:'°C',max:260,fault:'过温',rule:'>260°C超2s',pct:94,st:'w'},
+      {name:'左MCU心跳',id:'EMot_Life_L',val:'OK',unit:'',max:'-',fault:'通讯故障',rule:'心跳1s未更新',pct:20,st:'n'},
+      {name:'左绕组温度',id:'MCUL_WindingTemp',val:268,unit:'°C',max:260,fault:'过温',rule:'>260°C超2s',pct:103,st:'d'},
+      {name:'左电机电流',id:'CMot_WireCurrent_L',val:870,unit:'A',max:950,fault:'过流',rule:'>950A超2s',pct:92,st:'w'},
+    ],
+    vibs:[{name:'左电机主轴左侧振动',axes:false},{name:'左电机轴承上方振动',axes:true}],
+    spdSig:'左电机转速 (GMot_Spd_L)',spdVal:7620,
+    subH:{电气:75,热管理:48,机械:70,通讯:95},funcs:['驱动','制动回馈','散热'],funcSt:[1,0,0]},
+  motorR:{name:'右驱动电机',icon:'🟢',health:89,hasMotor:true,
+    signals:[
+      {name:'右电机电压',id:'AMot_Voltage_R',val:885,unit:'V',max:975,fault:'过/欠压',rule:'>975/<750V超2s',pct:70,st:'n'},
+      {name:'右电机转速',id:'GMot_Spd_R',val:7580,unit:'r/min',max:9800,fault:'超速',rule:'>9800超2s',pct:77,st:'n'},
+      {name:'右电机转矩',id:'HMot_Torque_R',val:1120,unit:'N·m',max:1500,fault:'过载',rule:'>1500超2s',pct:75,st:'n'},
+      {name:'右MCU温度',id:'MCUR_ModuleTemp',val:158,unit:'°C',max:260,fault:'过温',rule:'>260°C超2s',pct:61,st:'n'},
+      {name:'右MCU心跳',id:'EMot_Life_R',val:'OK',unit:'',max:'-',fault:'通讯故障',rule:'心跳1s未更新',pct:20,st:'n'},
+      {name:'右绕组温度',id:'MCUR_WindingTemp',val:165,unit:'°C',max:260,fault:'过温',rule:'>260°C超2s',pct:63,st:'n'},
+      {name:'右电机电流',id:'CMot_WireCurrent_R',val:680,unit:'A',max:950,fault:'过流',rule:'>950A超2s',pct:72,st:'n'},
+    ],
+    vibs:[{name:'右电机主轴右侧振动',axes:false},{name:'右电机轴承上方振动',axes:true}],
+    spdSig:'右电机转速 (GMot_Spd_R)',spdVal:7580,
+    subH:{电气:92,热管理:86,机械:88,通讯:98},funcs:['驱动','制动回馈','散热'],funcSt:[1,1,1]}
+};
+
+const ALARMS=[
+  {id:'ALM-20260306-001',lv:2,comp:'motorL',compN:'左驱动电机',type:'绕组温度超标',time:'2026-03-06 14:15:00',status:'未处理',detail:'MCUL_WindingTemp=268°C>260°C'},
+  {id:'ALM-20260307-002',lv:2,comp:'gen',compN:'发电机',type:'转矩接近过载',time:'2026-03-07 09:32:15',status:'未处理',detail:'Gen_torque=2340N·m接近2500'},
+  {id:'ALM-20260305-003',lv:1,comp:'hydraulic',compN:'液压系统',type:'主压力低于标准',time:'2026-03-05 16:45:20',status:'处理中',detail:'OilPress_Main=2.1<2.4MPa'},
+  {id:'ALM-20260306-004',lv:1,comp:'motorL',compN:'左驱动电机',type:'MCU温度偏高',time:'2026-03-06 14:10:33',status:'处理中',detail:'MCUL_ModuleTemp=245接近260'},
+  {id:'ALM-20260304-005',lv:1,comp:'motorL',compN:'左驱动电机',type:'电流偏高',time:'2026-03-04 11:22:08',status:'已处理',detail:'CMot=870A接近950A'},
+  {id:'ALM-20260303-006',lv:1,comp:'gen',compN:'发电机',type:'振动2x谐波偏高',time:'2026-03-03 08:55:42',status:'已处理',detail:'2倍频+12dB'},
+  {id:'ALM-20260302-007',lv:1,comp:'coupling',compN:'功率耦合',type:'振动偏高',time:'2026-03-02 13:40:10',status:'已处理',detail:'RMS超预警线'},
+];
+const DECISIONS=[
+  {id:'DEC-001',aid:'ALM-001',comp:'左驱动电机',fault:'绕组温度超标',lv:'h',sug:'降载至80%，停机检查',status:'待执行',time:'2026-03-06'},
+  {id:'DEC-002',aid:'ALM-002',comp:'发电机',fault:'转矩接近上限',lv:'m',sug:'间歇降载，72h内检查',status:'待审批',time:'2026-03-07'},
+  {id:'DEC-003',aid:'ALM-003',comp:'液压系统',fault:'主压力偏低',lv:'m',sug:'检查油泵和过滤器',status:'执行中',time:'2026-03-05'},
+  {id:'DEC-004',aid:'-',comp:'全系统',fault:'累计1240h',lv:'l',sug:'安排1500h维护',status:'已排期',time:'2026-03-01'},
+];
+const MAINTS=[
+  {id:'WO-228',title:'发电机绝缘检测',comp:'发电机',tech:'张伟',date:'02-28',status:'已完成'},
+  {id:'WO-307',title:'液压主压力校准',comp:'液压',tech:'李明',date:'03-07',status:'进行中'},
+  {id:'WO-315',title:'左电机轴承更换',comp:'左电机',tech:'待分配',date:'03-15',status:'已排期'},
+  {id:'WO-320',title:'1500h全面维护',comp:'全系统',tech:'全组',date:'03-20',status:'已排期'},
+  {id:'WO-215',title:'冷却系统清洗',comp:'发电机',tech:'王强',date:'02-15',status:'已完成'},
+  {id:'WO-310',title:'离合压力标定',comp:'离合器',tech:'赵六',date:'03-10',status:'进行中'},
+];
+
+let curPage='home',curSub='gen';
+let diagPP='raw',diagPPRun=false,diagRun=false,sigType='vib',sigLoaded=false,sigTimeVar=false,sigAlgo='hilbert',sigDenoise='wavelet';
+
+function sc(s){return s==='n'?'g':s==='w'?'y':'r';}
+function sl(s){return s==='n'?'正常':s==='w'?'预警':'告警';}
+function hc(v){return v>=85?'var(--green)':v>=70?'var(--yellow)':'var(--red)';}
+function rP(n,lo,hi){return Array.from({length:n},()=>lo+Math.random()*(hi-lo)).map(Math.round);}
+function mkC(clr,pts,h=120){
+  let d=`M0,${pts[0]}`;const s=600/(pts.length-1);for(let i=1;i<pts.length;i++)d+=` L${i*s},${pts[i]}`;
+  return `<div class="cha" style="height:${h}px"><svg viewBox="0 0 600 ${h}" preserveAspectRatio="none"><line x1="0" y1="${h*.33}" x2="600" y2="${h*.33}" stroke="var(--bd)" stroke-width=".4" stroke-dasharray="3,3"/><line x1="0" y1="${h*.66}" x2="600" y2="${h*.66}" stroke="var(--bd)" stroke-width=".4" stroke-dasharray="3,3"/><path d="${d} L600,${h} L0,${h} Z" fill="${clr}" opacity=".06"/><path d="${d}" fill="none" stroke="${clr}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="600" cy="${pts[pts.length-1]}" r="2.5" fill="${clr}" stroke="var(--bg1)" stroke-width="1.5"><animate attributeName="r" values="2.5;4;2.5" dur="2s" repeatCount="indefinite"/></circle></svg></div>`;
+}
+function mkBar(pts,h=55,clr='var(--cyan)'){
+  return `<div class="cha" style="height:${h}px"><svg viewBox="0 0 600 ${h}" preserveAspectRatio="none">${pts.map((v,i)=>{const bw=600/pts.length*.75;const x=i*(600/pts.length)+600/pts.length*.125;return `<rect x="${x}" y="${h-v}" width="${bw}" height="${v}" fill="${v>h*.7?'var(--yellow)':clr}" opacity="${v>h*.6?.8:.5}" rx="1"/>`;}).join('')}</svg></div>`;
+}
+function mkSpec(){
+  const C=['rgba(10,14,26,.9)','rgba(6,182,212,.1)','rgba(6,182,212,.22)','rgba(59,130,246,.22)','rgba(59,130,246,.4)','rgba(245,158,11,.3)','rgba(245,158,11,.5)','rgba(239,68,68,.3)'];
+  let h='<div style="height:70px;border-radius:4px;overflow:hidden;display:grid;grid-template-columns:repeat(48,1fr);grid-template-rows:repeat(12,1fr);gap:1px;background:var(--bg0);">';
+  for(let i=0;i<576;i++){const c=i%48,r=Math.floor(i/48);let v=Math.random()*.2;if(r===3||r===4)v+=.3+Math.sin(c*.2)*.2;if(r===7||r===8)v+=.2+Math.sin(c*.15+1)*.15;v+=c/48*.1;v=Math.min(v,1);h+=`<div style="background:${C[Math.floor(v*(C.length-1))]};border-radius:1px;"></div>`;}
+  return h+'</div>';
+}
+function mkRing(score,sz=85){
+  const r=sz/2-7,circ=2*Math.PI*r,off=circ*(1-score/100),col=hc(score);
+  return `<div class="hr-w"><div class="hr" style="width:${sz}px;height:${sz}px"><svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}"><circle class="hr-bg" cx="${sz/2}" cy="${sz/2}" r="${r}"/><circle class="hr-f" cx="${sz/2}" cy="${sz/2}" r="${r}" stroke="${col}" stroke-dasharray="${circ}" stroke-dashoffset="${off}"/></svg><div class="hr-txt"><div class="hr-sc" style="color:${col};font-size:${sz/5}px">${score}</div><div class="hr-lb">健康</div></div></div></div>`;
+}
+function sigTbl(sigs){
+  let h=`<table class="stb"><thead><tr><th>信号</th><th>标识</th><th>当前值</th><th>阈值</th><th>负载</th><th>状态</th></tr></thead><tbody>`;
+  sigs.forEach(s=>{h+=`<tr><td class="sn">${s.name}</td><td><span class="sid">${s.id}</span></td><td><span class="sv ${sc(s.st)}">${s.val} ${s.unit}</span></td><td style="font-size:7px;color:var(--t3)">${s.max!=='-'?'<'+s.max+s.unit:'-'}</td><td><div class="sbar"><div class="sbf ${sc(s.st)}" style="width:${Math.min(s.pct,100)}%"></div></div></td><td><span class="stag ${sc(s.st)}">${sl(s.st)}</span></td></tr>`;});
+  return h+'</tbody></table>';
+}
+function lvBadge(lv){return `<span class="lv-badge lv-${lv}"><span class="sev ${lv===2?'r':lv===1?'y':'g'}"></span>${lv===0?'正常(0)':lv===1?'警告(1)':'危险(2)'}</span>`;}
+
+// ======= PAGES =======
+function pgHome(){
+  const all=Object.entries(SS);const ts=all.reduce((a,[_,s])=>a+s.signals.length+s.vibs.length,0);
+  const avgH=Math.round(all.reduce((a,[_,s])=>a+s.health,0)/all.length);
+  const aList=[];all.forEach(([k,s])=>{s.signals.filter(sig=>sig.st!=='n').forEach(sig=>{aList.push({sub:s.name,fault:sig.fault,val:`${sig.val}${sig.unit}`,st:sig.st});});});
+  return `<div class="ptb"><div><div class="pbc">首页</div><div class="pt">装备状态总览</div></div><div class="pa"><button class="btn-p">🔄 刷新</button></div></div>
+  <div class="g4">
+    <div class="ovc gn"><div class="ov-top"><div class="ov-lb">健康指数</div><div class="ov-ic gn">❤</div></div><div class="ov-v" style="color:${hc(avgH)}">${avgH}</div><div class="ov-s">综合</div></div>
+    <div class="ovc cn"><div class="ov-top"><div class="ov-lb">传感器</div><div class="ov-ic cn">📡</div></div><div class="ov-v" style="color:var(--cyan)">${ts}/${ts}</div><div class="ov-s">100%在线</div></div>
+    <div class="ovc rd"><div class="ov-top"><div class="ov-lb">故障</div><div class="ov-ic rd">🔴</div></div><div class="ov-v" style="color:var(--red)">${ALARMS.filter(a=>a.lv===2&&a.status==='未处理').length}</div><div class="ov-s">待处理</div></div>
+    <div class="ovc yl"><div class="ov-top"><div class="ov-lb">警告</div><div class="ov-ic yl">⚠</div></div><div class="ov-v" style="color:var(--yellow)">${ALARMS.filter(a=>a.lv===1).length}</div></div>
+  </div>
+  <div class="g21">
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>传动系统拓扑</div><div class="cbg live">● 在线</div></div><div class="cbd">
+      <div class="sys-diagram">
+        <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;"><defs><marker id="ah" markerWidth="5" markerHeight="3" refX="5" refY="1.5" orient="auto"><polygon points="0 0,5 1.5,0 3" fill="var(--bd2)"/></marker></defs>
+        <line x1="145" y1="65" x2="280" y2="65" stroke="var(--bd2)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+        <line x1="395" y1="50" x2="490" y2="30" stroke="var(--bd2)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+        <line x1="395" y1="80" x2="490" y2="100" stroke="var(--bd2)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+        <line x1="335" y1="90" x2="335" y2="150" stroke="var(--bd2)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+        <line x1="335" y1="185" x2="335" y2="220" stroke="var(--bd2)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/></svg>
+        <div class="sys-node" style="left:25px;top:38px;" onclick="goSub('gen')"><div class="nd-icon">⚡</div><div class="nd-name">发电机</div><div class="nd-st"><div class="sd g"></div><span style="color:var(--green)">85</span></div></div>
+        <div class="sys-node" style="left:280px;top:38px;" onclick="goSub('coupling')"><div class="nd-icon">🔗</div><div class="nd-name">功率耦合</div><div class="nd-st"><div class="sd g"></div><span style="color:var(--green)">88</span></div></div>
+        <div class="sys-node" style="left:490px;top:8px;" onclick="goSub('motorL')"><div class="nd-icon">🔴</div><div class="nd-name">左驱动电机</div><div class="nd-st"><div class="sd r"></div><span style="color:var(--red)">62</span></div></div>
+        <div class="sys-node" style="left:490px;top:78px;" onclick="goSub('motorR')"><div class="nd-icon">🟢</div><div class="nd-name">右驱动电机</div><div class="nd-st"><div class="sd g"></div><span style="color:var(--green)">89</span></div></div>
+        <div class="sys-node" style="left:255px;top:150px;" onclick="goSub('hydraulic')"><div class="nd-icon">💧</div><div class="nd-name">液压系统</div><div class="nd-st"><div class="sd y"></div><span style="color:var(--yellow)">78</span></div></div>
+        <div class="sys-node" style="left:245px;top:222px;" onclick="goSub('clutch')"><div class="nd-icon">⚙</div><div class="nd-name">离合器/制动器</div><div class="nd-st"><div class="sd g"></div><span style="color:var(--green)">91</span></div></div>
+      </div>
+    </div></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>分系统健康</div></div><div class="cbd">${Object.entries(SS).map(([k,s])=>`<div style="display:flex;align-items:center;gap:5px;margin-bottom:4px;cursor:pointer;" onclick="goSub('${k}')"><span style="font-size:10px">${s.icon}</span><span style="font-size:8px;min-width:65px;color:var(--t2)">${s.name}</span><div style="flex:1;height:10px;background:var(--bg0);border-radius:3px;overflow:hidden;position:relative;"><div style="height:100%;width:${s.health}%;background:${hc(s.health)};border-radius:3px;opacity:.5;"></div><span style="position:absolute;right:3px;top:50%;transform:translateY(-50%);font-size:6px;font-family:'JetBrains Mono';color:var(--t1)">${s.health}</span></div></div>`).join('')}</div></div>
+      <div class="card" style="flex:1"><div class="ch"><div class="ct-t"><div class="ct-d"></div>异常列表</div><div class="cbg err">${aList.length}</div></div><div class="cbd" style="max-height:120px;overflow-y:auto;">${aList.map(a=>`<div class="di ${a.st==='d'?'c':'w'}"><div class="di-ic ${a.st==='d'?'r':'y'}">${a.st==='d'?'🔴':'⚠'}</div><div><div class="di-t">${a.sub}—${a.fault}</div><div class="di-d">${a.val}</div></div></div>`).join('')}</div></div>
+    </div>
+  </div>`;
+}
+
+function pgMonitor(){
+  const s=SS[curSub];
+  let vibVis='';
+  if(s.vibs.length>0){
+    vibVis=`<div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>振动传感器可视化</div><div class="cbg info">${s.vibs.length}ch</div></div><div class="cbd"><div class="${s.vibs.length>1?'g2':''}">${s.vibs.map(v=>{
+      let ax=v.axes?`<div style="display:flex;gap:3px;margin-bottom:4px;"><span class="chip act">X轴</span><span class="chip">Y轴</span><span class="chip">Z轴</span></div>`:'';
+      return `<div><div style="font-size:9px;font-weight:500;margin-bottom:3px">${v.name}${v.axes?' (三向)':''}</div>${ax}${mkC('var(--cyan)',rP(20,12,70),60)}</div>`;}).join('')}</div></div></div>`;
+  }
+  return `<div class="ptb"><div><div class="pbc">状态监测 / <span>${s.name}</span></div><div class="pt">${s.name} — 状态监测与信号</div></div><div class="pa"><button class="btn-p">📥 导出</button></div></div>
+  ${s.signals.length>0?`<div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>CAN总线信号</div><div class="cbg live">● 实时</div></div><div class="cbd" style="padding:0">${sigTbl(s.signals)}</div></div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>信号趋势</div></div><div class="cbd"><div class="g3">${s.signals.slice(0,6).map(sig=>`<div><div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="font-size:8px;font-weight:500">${sig.name}</span><span class="stag ${sc(sig.st)}">${sig.val}${sig.unit}</span></div>${mkC(sig.st==='n'?'var(--blue)':sig.st==='w'?'var(--yellow)':'var(--red)',rP(12,15,80),50)}</div>`).join('')}</div></div></div>`:''}
+  ${vibVis}
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>健康</div></div><div class="cbd"><div style="display:flex;align-items:center;gap:14px;">${mkRing(s.health,75)}<div style="flex:1;display:grid;grid-template-columns:repeat(${Math.min(Object.keys(s.subH).length,4)},1fr);gap:5px;">${Object.entries(s.subH).map(([k,v])=>`<div style="background:rgba(255,255,255,.015);border-radius:4px;padding:5px;text-align:center;"><div style="font-size:7px;color:var(--t3)">${k}</div><div style="font-family:'JetBrains Mono';font-size:12px;font-weight:700;color:${hc(v)}">${v}</div></div>`).join('')}</div></div></div></div>`;
+}
+
+function pgAssess(){
+  const s=SS[curSub];const stL=s.health>=85?'正常':s.health>=70?'一般异常':'严重异常';const stC=hc(s.health);
+  return `<div class="ptb"><div><div class="pbc">状态评估 / <span>${s.name}</span></div><div class="pt">${s.name} — 状态评估</div></div><div class="pa"><button class="btn-p">📊 报告</button></div></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>健康状态</div></div><div class="cbd">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;padding:10px;background:rgba(255,255,255,.02);border-radius:6px;border:1px solid var(--bd);">${mkRing(s.health,70)}<div><div style="font-size:8px;color:var(--t3)">当前状态</div><div style="font-size:16px;font-weight:900;color:${stC};margin:3px 0">${stL}</div><div style="font-size:8px;color:var(--t3)">${s.health}/100</div></div></div>
+      ${Object.entries(s.subH).map(([k,v])=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;padding:6px;background:rgba(255,255,255,.01);border-radius:4px;"><span style="font-size:9px;min-width:50px">${k}</span><div style="flex:1;height:5px;background:var(--bg0);border-radius:2px;overflow:hidden;"><div style="height:100%;width:${v}%;background:${hc(v)};border-radius:2px;opacity:.5"></div></div><span style="font-family:'JetBrains Mono';font-size:10px;font-weight:700;color:${hc(v)};min-width:22px;text-align:right">${v}</span></div>`).join('')}
+    </div></div>
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>功能评估</div></div><div class="cbd">
+      ${s.funcs.map((f,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;background:rgba(255,255,255,.01);border-radius:4px;margin-bottom:3px;border-left:2px solid ${s.funcSt[i]?'var(--green)':'var(--red)'}"><span style="font-size:9px">${f}</span><span style="font-size:7px;color:${s.funcSt[i]?'var(--green)':'var(--red)'}">${s.funcSt[i]?'✓正常':'✗异常'}</span></div>`).join('')}
+    </div></div>
+  </div>
+  ${s.signals.length>0?`<div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>故障规则库</div></div><div class="cbd" style="padding:0"><table class="stb"><thead><tr><th>故障</th><th>信号</th><th>判定</th><th>状态</th></tr></thead><tbody>${s.signals.map(sig=>`<tr><td class="sn">${sig.fault}</td><td><span class="sid">${sig.id}</span></td><td style="font-size:8px;color:var(--t2)">${sig.rule}</td><td><span class="stag ${sc(sig.st)}">${sl(sig.st)}</span></td></tr>`).join('')}</tbody></table></div></div>`:''}`;
+}
+
+function pgAnomaly(){
+  return `<div class="ptb"><div><div class="pbc">异常报警</div><div class="pt">异常报警管理</div></div><div class="pa"><button class="btn-p">📊 报告</button></div></div>
+  <div class="card" style="margin-bottom:0"><div class="cbd" style="padding:6px 10px;">
+    <div style="font-size:9px;font-weight:600;margin-bottom:4px">告警级别说明</div>
+    <div style="display:flex;gap:12px;font-size:8px;color:var(--t2);">
+      <span>${lvBadge(0)} — 参数正常，无异常</span>
+      <span>${lvBadge(1)} — 参数偏离正常范围，需关注</span>
+      <span>${lvBadge(2)} — 参数超过安全阈值，需立即处理</span>
+    </div>
+  </div></div>
+  <div class="g4">
+    <div class="ovc rd"><div class="ov-top"><div class="ov-lb">危险(2)</div><div class="ov-ic rd">🔴</div></div><div class="ov-v" style="color:var(--red)">${ALARMS.filter(a=>a.lv===2).length}</div></div>
+    <div class="ovc yl"><div class="ov-top"><div class="ov-lb">警告(1)</div><div class="ov-ic yl">⚠</div></div><div class="ov-v" style="color:var(--yellow)">${ALARMS.filter(a=>a.lv===1).length}</div></div>
+    <div class="ovc gn"><div class="ov-top"><div class="ov-lb">已处理</div><div class="ov-ic gn">✓</div></div><div class="ov-v" style="color:var(--green)">${ALARMS.filter(a=>a.status==='已处理').length}</div></div>
+    <div class="ovc bl"><div class="ov-top"><div class="ov-lb">检测算法</div><div class="ov-ic bl">🧮</div></div><div class="ov-v" style="color:var(--blue)">3</div><div class="ov-s">3σ/KMeans/AE</div></div>
+  </div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>报警数据表</div><div style="display:flex;gap:3px;"><select style="font-size:8px;padding:2px 5px;"><option>全部组件</option><option>发电机</option><option>液压</option><option>左电机</option><option>右电机</option><option>耦合</option></select><select style="font-size:8px;padding:2px 5px;"><option>全部状态</option><option>未处理</option><option>处理中</option><option>已处理</option></select><select style="font-size:8px;padding:2px 5px;"><option>全部级别</option><option>危险(2)</option><option>警告(1)</option></select></div></div>
+  <div class="cbd" style="padding:0"><table class="stb"><thead><tr><th>报警ID</th><th>级别</th><th>部件</th><th>类型</th><th>详情</th><th>时间</th><th>状态</th><th>操作</th></tr></thead><tbody>${ALARMS.map(a=>`<tr><td><span class="sid">${a.id}</span></td><td>${lvBadge(a.lv)}</td><td class="sn">${a.compN}</td><td style="font-size:8px;color:var(--t2)">${a.type}</td><td style="font-size:7px;color:var(--t3);max-width:120px">${a.detail}</td><td style="font-size:7px;font-family:'JetBrains Mono';color:var(--t3)">${a.time}</td><td><span class="stag ${a.status==='未处理'?'d':a.status==='处理中'?'w':'n'}">${a.status}</span></td><td style="white-space:nowrap"><button class="btn-sm">详情</button> <button class="btn-sm primary" onclick="genDec('${a.id}')">生成决策</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+function pgDiagnosis(){
+  const s=SS[curSub];
+  const canDiag=['gen','motorL','motorR','coupling'].includes(curSub);
+  if(!canDiag)return `<div class="ptb"><div><div class="pt">故障诊断</div></div></div><div class="card"><div class="cbd" style="text-align:center;padding:30px;color:var(--t3)">面向驱动电机、发电机和功率耦合机构</div></div>`;
+
+  // Preprocess visualization only shown after clicking "运行预处理"
+  let preVis='<div style="text-align:center;padding:30px;color:var(--t3);font-size:9px;">请在左侧选择预处理方法后点击「▶ 运行预处理」查看结果</div>';
+  if(diagPPRun){
+    if(diagPP==='raw') preVis=`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">原始信号波形</div>${mkC('var(--cyan)',rP(25,12,100),85)}`;
+    else if(diagPP==='fft') preVis=`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">FFT频谱</div>${mkBar(rP(50,3,50).map((v,i)=>i===5?50:i===12?38:v),60)}`;
+    else if(diagPP==='cwt') preVis=`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">CWT时频图</div>${mkSpec()}`;
+    else if(diagPP==='spca') preVis=`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">SPCA信息融合特征图</div><div style="width:100px;height:100px;margin:8px auto;border-radius:6px;overflow:hidden;background:conic-gradient(from 0deg,rgba(59,130,246,.6),rgba(6,182,212,.5),rgba(16,185,129,.4),rgba(245,158,11,.5),rgba(239,68,68,.4),rgba(139,92,246,.5),rgba(59,130,246,.6));filter:blur(2px) contrast(1.2);"></div><div style="font-size:7px;color:var(--t3);text-align:center">融合特征矩阵 64×64</div>`;
+    else if(diagPP==='cwtf') preVis=`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">CWT信息融合特征图</div><div style="width:100px;height:100px;margin:8px auto;border-radius:6px;overflow:hidden;background:radial-gradient(circle at 30% 40%,rgba(239,68,68,.5),rgba(245,158,11,.4) 30%,rgba(59,130,246,.4) 50%,rgba(6,182,212,.3) 70%,rgba(16,185,129,.2));filter:blur(1px);"></div><div style="font-size:7px;color:var(--t3);text-align:center">CWT融合特征 64×64</div>`;
+  }
+
+  // Determine step progress
+  const step = diagRun ? 6 : diagPPRun ? 4 : 3;
+
+  // Diagnosis result only shown after clicking "开始故障诊断"
+  let diagResult='<div style="text-align:center;padding:20px;color:var(--t3);font-size:9px;">请完成预处理后点击「🧠 开始故障诊断」运行推理</div>';
+  if(diagRun){
+    diagResult=`<div class="g3">
+      <div style="background:rgba(255,255,255,.02);border-radius:5px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:7px;color:var(--t3)">预测类别</div><div style="font-size:14px;font-weight:900;color:var(--yellow);margin:3px 0">轴承内圈故障</div><div style="font-size:7px;color:var(--t3)">置信度 87.3%</div></div>
+      <div style="background:rgba(255,255,255,.02);border-radius:5px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:7px;color:var(--t3)">故障归属</div><div style="font-size:12px;font-weight:700;color:var(--cyan);margin:3px 0">${s.name}</div><div style="font-size:7px;color:var(--t3)">${s.signals.length+s.vibs.length}通道</div></div>
+      <div style="background:rgba(255,255,255,.02);border-radius:5px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:7px;color:var(--t3)">算法</div><div style="font-size:12px;font-weight:700;color:var(--blue);margin:3px 0">IFMAML</div><div style="font-size:7px;color:var(--t3)">5-way 1-shot</div></div>
+    </div>
+    <div style="margin-top:6px;padding:6px;background:rgba(239,68,68,.03);border:1px solid rgba(239,68,68,.08);border-radius:4px;font-size:8px;color:var(--t2);line-height:1.4;">
+      <b style="color:var(--red)">结论：</b>${s.name}存在轴承内圈缺陷特征，归属机械传动子系统，建议安排检修更换。
+    </div>`;
+  }
+
+  return `<div class="ptb"><div><div class="pbc">故障诊断 / <span>${s.name}</span></div><div class="pt">${s.name} — 智能故障诊断</div></div><div class="pa"><button class="btn-o">📋 历史</button></div></div>
+  <div class="proc-steps">
+    <div class="proc-step done">①算法选择</div><div class="proc-arrow">→</div>
+    <div class="proc-step done">②数据选择</div><div class="proc-arrow">→</div>
+    <div class="proc-step done">③异常剔除</div><div class="proc-arrow">→</div>
+    <div class="proc-step ${step>=4?'done':'active'}">④预处理</div><div class="proc-arrow">→</div>
+    <div class="proc-step ${step>=6?'done':step>=5?'active':''}">⑤推理</div><div class="proc-arrow">→</div>
+    <div class="proc-step ${step>=6?'done':''}">⑥结果</div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>配置</div></div><div class="cbd">
+      <div style="font-size:9px;font-weight:600;color:var(--cyan);margin-bottom:6px">①算法</div>
+      <select style="width:100%;margin-bottom:8px;"><option>IFMAML 少样本诊断</option><option>MCITL 多通道迁移学习</option>${curSub!=='coupling'?'<option>电机匝间短路判别算法</option>':''}</select>
+      <div style="font-size:9px;font-weight:600;color:var(--cyan);margin-bottom:4px">②输入数据</div>
+      <div style="max-height:65px;overflow-y:auto;padding:2px;background:var(--bg0);border-radius:4px;margin-bottom:8px;font-size:8px;">
+        ${s.signals.map(sig=>`<label style="display:flex;align-items:center;gap:3px;padding:1px 3px;color:var(--t2);"><input type="checkbox" checked style="accent-color:var(--blue);width:9px;height:9px;">${sig.name}</label>`).join('')}
+        ${s.vibs.map(v=>`<label style="display:flex;align-items:center;gap:3px;padding:1px 3px;color:var(--t2);"><input type="checkbox" checked style="accent-color:var(--cyan);width:9px;height:9px;">🔊${v.name}</label>`).join('')}
+      </div>
+      <div style="font-size:9px;font-weight:600;color:var(--orange);margin-bottom:4px">③异常检测与剔除</div>
+      <div style="padding:5px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.08);border-radius:4px;margin-bottom:8px;">
+        <button class="btn-sm primary" onclick="alert('检测完成: 3处异常已标记剔除')">▶ 运行检测</button>
+        <span style="font-size:7px;color:var(--green);margin-left:4px">✓ 3处已剔除</span>
+      </div>
+      <div style="font-size:9px;font-weight:600;color:var(--cyan);margin-bottom:4px">④预处理</div>
+      <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px;">
+        ${['raw|原始信号','fft|FFT','cwt|CWT','spca|SPCA融合','cwtf|CWT融合'].map(c=>{const[k,l]=c.split('|');return `<span class="chip ${diagPP===k?'act':''}" onclick="diagPP='${k}';diagPPRun=false;nav()">${l}</span>`;}).join('')}
+      </div>
+      <button class="btn-o" style="width:100%;padding:5px;font-size:9px;margin-bottom:10px;" onclick="diagPPRun=true;nav()">▶ 运行预处理</button>
+      ${diagPPRun?'<div style="font-size:7px;color:var(--green);margin-bottom:8px;text-align:center">✓ 预处理完成</div>':''}
+      <div style="border-top:1px solid var(--bd);padding-top:10px;margin-top:2px;">
+        <button class="btn-p" style="width:100%;padding:8px;font-size:11px;${!diagPPRun?'opacity:.4;pointer-events:none;':''}" onclick="diagRun=true;nav()">🧠 开始故障诊断</button>
+        ${!diagPPRun?'<div style="font-size:7px;color:var(--t3);text-align:center;margin-top:4px">请先完成预处理</div>':''}
+      </div>
+    </div></div>
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>预处理可视化</div></div><div class="cbd">${preVis}</div></div>
+  </div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>诊断结果</div>${diagRun?'<div class="cbg live">✓ 完成</div>':''}</div><div class="cbd">${diagResult}</div></div>`;
+}
+
+// ===== SIGNAL ANALYSIS (renamed from vibration) =====
+function pgSigAnalysis(){
+  const s=SS[curSub];
+  const hasVib=s.vibs.length>0;
+  const hasCurrent=s.hasMotor;
+  if(!hasVib&&!hasCurrent) return `<div class="ptb"><div><div class="pt">信号分析</div></div></div><div class="card"><div class="cbd" style="text-align:center;padding:30px;color:var(--t3)">该子系统无振动或电流信号可分析</div></div>`;
+
+  // Build sensor options
+  let sensorOpts=s.vibs.map(v=>`<option value="vib">${v.name}${v.axes?' (三向)':''}</option>`).join('');
+  if(hasCurrent) sensorOpts+=`<option value="cur">电流信号</option>`;
+
+  const isVib=(sigType==='vib');
+  const has3axis=isVib && s.vibs.some(v=>v.axes);
+
+  // Axis/phase label
+  let axisLabel=isVib?'轴向':'相别';
+  let axisOpts=isVib?(has3axis?'<option>X轴</option><option>Y轴</option><option>Z轴</option>':'<option>单轴</option>'):'<option>A相</option><option>B相</option><option>C相</option>';
+
+  // Indicators
+  let indicators='';
+  if(isVib){
+    indicators=[{n:'峰值',v:'8.72 m/s²'},{n:'均值',v:'0.12 m/s²'},{n:'有效值(RMS)',v:'2.34 m/s²'},{n:'峭度系数',v:'4.21'},{n:'方差',v:'5.48'},{n:'标准差',v:'2.34'},{n:'偏度',v:'-0.18'}].map(m=>`<div style="background:rgba(255,255,255,.02);border-radius:5px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:10px;color:var(--t2);font-weight:500;margin-bottom:3px">${m.n}</div><div style="font-family:'JetBrains Mono';font-size:14px;font-weight:700;color:var(--green)">${m.v}</div></div>`).join('');
+  } else {
+    indicators=[{n:'均值',v:'285.3 A'},{n:'RMS',v:'302.1 A'},{n:'峰值',v:'724 A'},{n:'峰-峰值',v:'1290 A'},{n:'峰值因子',v:'2.40'},{n:'主频',v:'50 Hz'}].map(m=>`<div style="background:rgba(255,255,255,.02);border-radius:5px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:10px;color:var(--t2);font-weight:500;margin-bottom:3px">${m.n}</div><div style="font-family:'JetBrains Mono';font-size:14px;font-weight:700;color:var(--blue)">${m.v}</div></div>`).join('');
+  }
+
+  // Loaded content
+  let loadedContent='';
+  if(sigLoaded){
+    loadedContent=`
+    <div class="g2">
+      <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>${isVib?'振动信号 + 转速':'电流信号'}</div><div class="cbg live">已加载</div></div><div class="cbd">
+        <div style="font-size:8px;color:var(--t2);margin-bottom:2px">${isVib?'振动加速度':'电流波形'}</div>
+        ${mkC(isVib?'var(--cyan)':'var(--blue)',rP(30,10,90),65)}
+        <div class="ch-lb"><span>0s</span><span>0.5s</span><span>1.0s</span></div>
+        ${isVib?`<div style="font-size:8px;color:var(--t2);margin:6px 0 2px">转速: ${s.spdSig}</div>${mkC('var(--orange)',rP(30,50,75),40)}<div class="ch-lb"><span>0s</span><span>0.5s</span><span>1.0s</span></div>`:''}
+      </div></div>
+      <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>时频域指标</div></div><div class="cbd">
+        <div style="display:grid;grid-template-columns:repeat(${isVib?4:3},1fr);gap:4px;">${indicators}</div>
+      </div></div>
+    </div>
+
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>频谱分析</div></div>
+    ${isVib?`
+      <div class="cbd">
+        <div style="font-size:9px;font-weight:600;color:var(--cyan);margin-bottom:4px">数据预处理（去噪）</div>
+        <div style="display:flex;gap:3px;margin-bottom:8px;">
+          <span class="chip ${sigDenoise==='wavelet'?'act':''}" onclick="sigDenoise='wavelet';nav()">小波阈值去噪</span>
+          <span class="chip ${sigDenoise==='ar'?'act':''}" onclick="sigDenoise='ar';nav()">自回归模型去噪</span>
+        </div>
+        <div class="g2" style="margin-bottom:10px;">
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">原始信号</div>${mkC('var(--cyan)',rP(20,12,70),40)}</div>
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">去噪后信号 (${sigDenoise==='wavelet'?'小波阈值':'AR模型'})</div>${mkC('var(--teal)',rP(20,15,60),40)}</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:6px;background:rgba(255,255,255,.02);border-radius:5px;border:1px solid var(--bd);">
+          <span style="font-size:8px;color:var(--t2)">时变转速？</span>
+          <span class="chip ${sigTimeVar?'':'act'}" onclick="sigTimeVar=false;nav()">否</span>
+          <span class="chip ${sigTimeVar?'act':''}" onclick="sigTimeVar=true;nav()">是</span>
+          ${sigTimeVar?'<span style="font-size:7px;color:var(--orange)">→角域重采样</span>':''}
+        </div>
+        ${sigTimeVar?`<div style="font-size:9px;font-weight:600;color:var(--orange);margin-bottom:4px">角域重采样</div><div class="g2" style="margin-bottom:8px;"><div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">去噪后信号</div>${mkC('var(--teal)',rP(20,12,70),45)}</div><div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">角域重采样后</div>${mkC('var(--green)',rP(20,15,65),45)}</div></div>`:''}
+
+        <div style="font-size:9px;font-weight:600;color:var(--cyan);margin-bottom:4px">频谱分析算法</div>
+        <div style="display:flex;gap:3px;margin-bottom:8px;">
+          <span class="chip ${sigAlgo==='hilbert'?'act':''}" onclick="sigAlgo='hilbert';nav()">希尔伯特变换</span>
+          <span class="chip ${sigAlgo==='eemd'?'act':''}" onclick="sigAlgo='eemd';nav()">集成经验模态分解</span>
+          <span class="chip ${sigAlgo==='fmd'?'act':''}" onclick="sigAlgo='fmd';nav()">特征模式分解</span>
+        </div>
+
+        ${sigAlgo==='hilbert'?`<div class="g2">
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">原始信号</div>${mkC('var(--blue)',rP(25,10,80),55)}</div>
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">Hilbert包络特征</div>${mkC('var(--orange)',rP(25,5,50).map((v,i)=>i%5===0?50:v),55)}</div>
+        </div>`:''}
+
+        ${sigAlgo==='eemd'?`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">EEMD本征模式分量 (IMF)</div>
+        ${[1,2,3].map(i=>`<div class="fmd-comp"><div class="fmd-title"><span>IMF ${i}</span></div><div class="g2"><div>${mkC(['var(--blue)','var(--purple)','var(--teal)'][i-1],rP(20,15+i*5,65-i*5),35)}<div style="font-size:7px;color:var(--t3);text-align:center">分量波形</div></div><div>${mkBar(rP(35,2,Math.max(10,45-i*10)).map((v,j)=>j===4?45-i*8:v),35,'var(--orange)')}<div style="font-size:7px;color:var(--t3);text-align:center">包络特征</div></div></div></div>`).join('')}`:''}
+
+        ${sigAlgo==='fmd'?`<div style="font-size:8px;color:var(--t2);margin-bottom:3px">FMD特征模式分量</div>
+        ${[1,2,3,4].map(i=>`<div class="fmd-comp"><div class="fmd-title"><span>FMD分量 ${i}</span><span style="font-size:6px;color:var(--t3)">f=${[125,340,680,1250][i-1]}Hz</span></div><div class="g2"><div>${mkC(['var(--blue)','var(--purple)','var(--teal)','var(--orange)'][i-1],rP(20,18+i*3,65-i*5),35)}<div style="font-size:7px;color:var(--t3);text-align:center">分量波形</div></div><div>${mkBar(rP(35,2,Math.max(10,50-i*8)).map((v,j)=>j===4&&i<3?48-i*8:v),35)}<div style="font-size:7px;color:var(--t3);text-align:center">包络谱</div></div></div></div>`).join('')}
+        <div style="padding:4px;background:rgba(245,158,11,.04);border:1px solid rgba(245,158,11,.08);border-radius:4px;font-size:7px;color:var(--t2);margin-top:4px;"><b style="color:var(--yellow)">提示：</b>FMD分量1/2在BPFI处检出包络峰值，疑似轴承内圈缺陷。</div>`:''}
+      </div>`:`
+      <div class="cbd">
+        <div style="font-size:9px;font-weight:600;color:var(--blue);margin-bottom:6px">基于FFT的电流频谱分析</div>
+        <div class="g2">
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">原始电流信号</div>${mkC('var(--blue)',rP(25,15,85),65)}<div class="ch-lb"><span>0s</span><span>0.5s</span><span>1.0s</span></div></div>
+          <div><div style="font-size:8px;color:var(--t2);margin-bottom:2px">FFT频谱</div>${mkBar(rP(50,2,45).map((v,i)=>i===2?55:i===5?35:i===10?25:v),65,'var(--blue)')}<div class="ch-lb"><span>0Hz</span><span>100</span><span>200</span><span>300</span><span>400</span><span>500</span></div></div>
+        </div>
+        <div style="padding:4px;background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.08);border-radius:4px;font-size:7px;color:var(--t2);margin-top:6px;"><b style="color:var(--blue)">分析：</b>主频50Hz基波正常，谐波分量未见明显异常特征。</div>
+      </div>`}
+    </div>`;
+  }
+
+  return `<div class="ptb"><div><div class="pbc">信号分析 / <span>${s.name}</span></div><div class="pt">${s.name} — 信号分析</div></div><div class="pa"><button class="btn-p">📥 导出</button></div></div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>数据加载</div></div><div class="cbd">
+    <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;">
+      <div style="display:flex;align-items:center;gap:3px;"><label style="font-size:8px;color:var(--t2)">传感器/信号</label><select onchange="sigType=this.options[this.selectedIndex].value;sigLoaded=false;nav()">${sensorOpts}</select></div>
+      <div style="display:flex;align-items:center;gap:3px;"><label style="font-size:8px;color:var(--t2)">${axisLabel}</label><select>${axisOpts}</select></div>
+      <div style="display:flex;align-items:center;gap:3px;"><span style="font-size:8px;color:var(--t2)">转速: </span><span style="font-size:8px;font-family:'JetBrains Mono';color:var(--cyan)">${s.spdSig||'N/A'} = ${s.spdVal} r/min</span></div>
+      <button class="btn-p" onclick="sigLoaded=true;nav()">📂 加载数据</button>
+      ${sigLoaded?'<span style="font-size:7px;color:var(--green)">✓ 已加载</span>':''}
+    </div>
+  </div></div>
+  ${loadedContent}`;
+}
+
+function pgDecision(){
+  return `<div class="ptb"><div><div class="pt">辅助决策</div></div><div class="pa"><button class="btn-p">🧠 生成建议</button></div></div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>决策列表</div><div style="display:flex;gap:3px;"><select style="font-size:8px;padding:2px 5px;"><option>全部</option><option>高</option><option>中</option><option>低</option></select></div></div>
+  <div class="cbd" style="padding:0"><table class="stb"><thead><tr><th>ID</th><th>告警</th><th>部件</th><th>故障</th><th>优先级</th><th>建议</th><th>状态</th><th>操作</th></tr></thead><tbody>${DECISIONS.map(d=>`<tr><td><span class="sid">${d.id}</span></td><td><span class="sid">${d.aid}</span></td><td class="sn">${d.comp}</td><td style="font-size:7px;color:var(--t2);max-width:100px">${d.fault}</td><td><span class="stag ${d.lv==='h'?'d':d.lv==='m'?'w':'b'}">${d.lv==='h'?'高':d.lv==='m'?'中':'低'}</span></td><td style="font-size:7px;color:var(--t2);max-width:150px">${d.sug}</td><td><span class="stag ${d.status==='待执行'?'d':d.status==='执行中'?'w':'n'}">${d.status}</span></td><td><button class="btn-sm primary">执行</button></td></tr>`).join('')}</tbody></table></div></div>
+  <div class="g2">
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>效果追踪</div></div><div class="cbd">${mkC('var(--green)',rP(12,35,100),70)}<div class="ch-lb"><span>1月</span><span>2月</span><span>3月</span></div></div></div>
+    <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>统计</div></div><div class="cbd"><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">${[{n:'待执行',v:1,c:'var(--red)'},{n:'待审批',v:1,c:'var(--yellow)'},{n:'执行中',v:1,c:'var(--blue)'},{n:'已排期',v:1,c:'var(--green)'}].map(m=>`<div style="background:rgba(255,255,255,.02);border-radius:4px;padding:8px;text-align:center;border:1px solid var(--bd);"><div style="font-size:7px;color:var(--t3)">${m.n}</div><div style="font-family:'JetBrains Mono';font-size:16px;font-weight:900;color:${m.c}">${m.v}</div></div>`).join('')}</div></div></div>
+  </div>`;
+}
+
+function pgMaintenance(){
+  return `<div class="ptb"><div><div class="pt">维修事件管理</div></div><div class="pa"><button class="btn-p">+ 创建工单</button></div></div>
+  <div class="g4">
+    <div class="ovc gn"><div class="ov-top"><div class="ov-lb">已完成</div><div class="ov-ic gn">✓</div></div><div class="ov-v" style="color:var(--green)">${MAINTS.filter(m=>m.status==='已完成').length}</div></div>
+    <div class="ovc yl"><div class="ov-top"><div class="ov-lb">进行中</div><div class="ov-ic yl">⏳</div></div><div class="ov-v" style="color:var(--yellow)">${MAINTS.filter(m=>m.status==='进行中').length}</div></div>
+    <div class="ovc bl"><div class="ov-top"><div class="ov-lb">已排期</div><div class="ov-ic bl">📅</div></div><div class="ov-v" style="color:var(--blue)">${MAINTS.filter(m=>m.status==='已排期').length}</div></div>
+    <div class="ovc pp"><div class="ov-top"><div class="ov-lb">均工时</div><div class="ov-ic pp">⏱</div></div><div class="ov-v" style="color:var(--purple)">4.2<span style="font-size:8px;color:var(--t3)">h</span></div></div>
+  </div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>工单</div><div style="display:flex;gap:3px;"><select style="font-size:8px;padding:2px 5px;"><option>全部状态</option><option>已完成</option><option>进行中</option><option>已排期</option></select></div></div>
+  <div class="cbd" style="padding:0"><table class="stb"><thead><tr><th>工单号</th><th>内容</th><th>组件</th><th>负责人</th><th>日期</th><th>状态</th><th>操作</th></tr></thead><tbody>${MAINTS.map(m=>`<tr><td><span class="sid">${m.id}</span></td><td class="sn">${m.title}</td><td style="font-size:8px;color:var(--t2)">${m.comp}</td><td style="font-size:8px;color:var(--t2)">${m.tech}</td><td style="font-size:7px;font-family:'JetBrains Mono';color:var(--t3)">${m.date}</td><td><span class="stag ${m.status==='已完成'?'n':m.status==='进行中'?'w':'b'}">${m.status}</span></td><td><button class="btn-sm">查看</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+
+function pgLog(){
+  const s=SS[curSub];const logs=[];const types=['采样','诊断','异常','心跳','归档','决策','阈值','振动'];
+  for(let i=0;i<18;i++){const t=types[i%8];const isW=i===1||i===2;logs.push({time:`${String(14-Math.floor(i/3)).padStart(2,'0')}:${String(Math.floor(Math.random()*60)).padStart(2,'0')}`,dot:isW?'y':i%4===0?'b':'g',msg:`<b>${t}</b> · ${s.name} · ${isW?'预警':'正常'}`});}
+  return `<div class="ptb"><div><div class="pt">系统日志</div></div><div class="pa"><button class="btn-p">📥 导出</button></div></div>
+  <div class="g4">
+    <div class="ovc bl"><div class="ov-top"><div class="ov-lb">今日</div><div class="ov-ic bl">📝</div></div><div class="ov-v" style="color:var(--blue)">2847</div></div>
+    <div class="ovc gn"><div class="ov-top"><div class="ov-lb">正常</div><div class="ov-ic gn">✓</div></div><div class="ov-v" style="color:var(--green)">2831</div></div>
+    <div class="ovc yl"><div class="ov-top"><div class="ov-lb">预警</div><div class="ov-ic yl">⚠</div></div><div class="ov-v" style="color:var(--yellow)">13</div></div>
+    <div class="ovc rd"><div class="ov-top"><div class="ov-lb">告警</div><div class="ov-ic rd">🔴</div></div><div class="ov-v" style="color:var(--red)">3</div></div>
+  </div>
+  <div class="card"><div class="ch"><div class="ct-t"><div class="ct-d"></div>日志流</div><div class="cbg live">● 实时</div></div>
+    <div class="tabs"><div class="tab act">全部</div><div class="tab">告警</div><div class="tab">预警</div><div class="tab">系统</div></div>
+    <div class="cbd">${logs.map(l=>`<div class="le"><div class="le-t">${l.time}</div><div class="le-d ${l.dot}"></div><div class="le-m">${l.msg}</div></div>`).join('')}</div>
+  </div>`;
+}
+
+// ROUTER
+const pages={home:pgHome,monitor:pgMonitor,assess:pgAssess,anomaly:pgAnomaly,diagnosis:pgDiagnosis,siganalysis:pgSigAnalysis,decision:pgDecision,maintenance:pgMaintenance,log:pgLog};
+function nav(){document.getElementById('mc').innerHTML=pages[curPage]();document.getElementById('mc').scrollTop=0;}
+
+window.goSub=function(sub){curSub=sub;sigLoaded=false;diagPPRun=false;diagRun=false;document.querySelectorAll('.si').forEach(s=>s.classList.toggle('act',s.dataset.sub===sub));nav();};
+window.genDec=function(){curPage='decision';document.querySelectorAll('.ni').forEach(n=>n.classList.toggle('act',n.dataset.page==='decision'));nav();};
+
+document.getElementById('sidebar').addEventListener('click',e=>{
+  const ni=e.target.closest('.ni[data-page]'),si=e.target.closest('.si[data-sub]');
+  if(ni){document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));ni.classList.add('act');curPage=ni.dataset.page;sigLoaded=false;diagPPRun=false;diagRun=false;nav();}
+  if(si){document.querySelectorAll('.si').forEach(s=>s.classList.remove('act'));si.classList.add('act');curSub=si.dataset.sub;sigLoaded=false;diagPPRun=false;diagRun=false;nav();}
+});
+
+setInterval(()=>{const n=new Date();document.getElementById('clock').textContent=`${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;},1000);
+nav();
+</script>
+</body>
+</html>
